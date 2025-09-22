@@ -122,7 +122,7 @@ class VerificationPopup {
     }
 
     /**
-     * Handle affiliate option click - FIXED VERSION
+     * Handle affiliate option click - FIXED VERSION WITH LOADING STATE
      */
     handleOptionClick(optionId) {
         console.log('VerificationPopup: Option clicked:', optionId);
@@ -133,23 +133,70 @@ class VerificationPopup {
             return;
         }
 
+        // CRITICAL: Immediately show loading state to prevent video from showing
+        this.showLoadingState();
+
         // Track affiliate click
         if (typeof analytics !== 'undefined') {
             analytics.trackAffiliateClick(optionId, this.currentVideoId);
         }
 
-        // IMMEDIATELY hide the popup first
-        this.hide();
-        
         // Mark verification as completed
         this.markCompleted(optionId);
         
         console.log('VerificationPopup: Redirecting to:', option.url);
         
-        // Small delay before redirect to ensure popup is hidden
-        setTimeout(() => {
-            window.location.href = option.url;
-        }, 100);
+        // Redirect immediately - no timeout delay
+        window.location.href = option.url;
+    }
+
+    /**
+     * Show loading state immediately when affiliate option is clicked
+     */
+    showLoadingState() {
+        console.log('VerificationPopup: Showing loading state');
+        
+        // Create or show loading overlay
+        let loadingOverlay = document.getElementById('affiliateLoadingOverlay');
+        if (!loadingOverlay) {
+            loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'affiliateLoadingOverlay';
+            loadingOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                color: white;
+                font-family: Arial, sans-serif;
+            `;
+            loadingOverlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                    <div style="font-size: 18px;">Redirecting...</div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            document.body.appendChild(loadingOverlay);
+        } else {
+            loadingOverlay.style.display = 'flex';
+        }
+        
+        // Hide the verification popup immediately
+        this.hide();
+        
+        // Prevent any video loading by disabling all interactions
+        document.body.style.pointerEvents = 'none';
     }
 
     /**
@@ -229,7 +276,7 @@ class VerificationPopup {
     }
 }
 
-// Global function for onclick handlers - FIXED VERSION
+// Global function for onclick handlers - FIXED VERSION WITH IMMEDIATE LOADING
 function handleVerification(optionId) {
     console.log('handleVerification called with:', optionId);
     

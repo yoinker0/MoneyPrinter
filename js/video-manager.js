@@ -154,6 +154,18 @@ class VideoManager {
     playVideo(video) {
         if (!video || !this.videoModal || !this.videoPlayer) return;
         
+        // CRITICAL: Check if affiliate redirect is happening
+        if (document.getElementById('affiliateLoadingOverlay')) {
+            console.log('VideoManager: Affiliate redirect in progress, not playing video');
+            return;
+        }
+        
+        // Check if body interactions are disabled (redirect happening)
+        if (document.body.style.pointerEvents === 'none') {
+            console.log('VideoManager: Body interactions disabled, not playing video');
+            return;
+        }
+        
         console.log('VideoManager: Playing video:', video.id);
         
         // Set video source with autoplay
