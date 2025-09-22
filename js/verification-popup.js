@@ -1,228 +1,154 @@
 /**
- * Verification popup module
+ * Verification popup module - Simplified version
  */
 
 class VerificationPopup {
     constructor() {
-        this.isCompleted = Utils.storage.get('verificationCompleted') || false;
-        this.currentVideoId = null;
         this.overlay = null;
-        this.affiliateOptions = [];
+        this.currentVideoId = null;
+        this.affiliateUrls = {
+            'instabang': 'https://t.mbsrv2.com/388143/5380?aff_sub5=SF_006OG000004lmDN',
+            'bootycallz': 'https://t.mbsrv2.com/388143/7411?bo=2753,2754,2755,2756&popUnder=true&aff_sub5=SF_006OG000004lmDN'
+        };
         
         this.init();
     }
 
-    async init() {
-        this.overlay = Utils.dom.$('#verificationOverlay');
-        await this.loadAffiliateOptions();
+    init() {
+        this.overlay = document.getElementById('verificationOverlay');
         this.setupEventListeners();
+        console.log('VerificationPopup: Initialized');
     }
 
     /**
-     * Load affiliate options from JSON
+     * Check if verification is completed
      */
-    async loadAffiliateOptions() {
-        try {
-            const response = await fetch('videos.json');
-            const data = await response.json();
-            this.affiliateOptions = data.affiliateOptions || [];
-        } catch (error) {
-            console.error('Failed to load affiliate options:', error);
-            // Fallback options
-            this.affiliateOptions = [
-                {
-                    id: 'instabang',
-                    title: 'Continue with Instabang',
-                    subtitle: 'Quick verification process',
-                    type: 'dating',
-                    color: 'blue',
-                    url: 'https://t.mbsrv2.com/388143/5380?aff_sub5=SF_006OG000004lmDN'
-                },
-                {
-                    id: 'bootycallz',
-                    title: 'Continue with BootyCallz',
-                    subtitle: 'Fast verification method',
-                    type: 'dating',
-                    color: 'green',
-                    url: 'https://t.mbsrv2.com/388143/7411?bo=2753,2754,2755,2756&popUnder=true&aff_sub5=SF_006OG000004lmDN'
-                }
-            ];
-        }
+    isVerified() {
+        return localStorage.getItem('verificationCompleted') === 'true';
     }
 
     /**
-     * Check if verification is needed
-     */
-    needsVerification() {
-        return !this.isCompleted;
-    }
-
-    /**
-     * Show popup for specific video
+     * Show verification popup
      */
     show(videoId) {
-        if (!this.needsVerification()) {
+        console.log('VerificationPopup: Showing popup for video:', videoId);
+        
+        if (this.isVerified()) {
+            console.log('VerificationPopup: Already verified, skipping popup');
             return false;
         }
 
-        console.log('VerificationPopup: Showing popup for video:', videoId);
         this.currentVideoId = videoId;
-        this.overlay.classList.remove('hidden');
         
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-        
-        // CRITICAL: Disable all video interactions while popup is open
-        this.disableVideoInteractions();
-        
-        // Track popup show
-        if (typeof analytics !== 'undefined') {
-            analytics.trackPopupShow(videoId);
+        if (this.overlay) {
+            this.overlay.classList.remove('hidden');
+            this.overlay.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            
+            // Track popup show
+            if (typeof analytics !== 'undefined') {
+                analytics.trackPopupShow(videoId);
+            }
+            
+            return true;
         }
         
-        return true;
+        return false;
     }
 
     /**
-     * Hide popup
+     * Hide verification popup
      */
     hide() {
         console.log('VerificationPopup: Hiding popup');
-        this.overlay.classList.add('hidden');
         
-        // Restore body scroll
-        document.body.style.overflow = 'auto';
-        
-        // CRITICAL: Re-enable video interactions
-        this.enableVideoInteractions();
+        if (this.overlay) {
+            this.overlay.classList.add('hidden');
+            this.overlay.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
     }
 
     /**
-     * Disable video interactions while popup is open
-     */
-    disableVideoInteractions() {
-        console.log('VerificationPopup: Disabling video interactions');
-        const videoCards = document.querySelectorAll('.video-card');
-        videoCards.forEach(card => {
-            card.style.pointerEvents = 'none';
-            card.classList.add('popup-active');
-        });
-    }
-
-    /**
-     * Re-enable video interactions
-     */
-    enableVideoInteractions() {
-        console.log('VerificationPopup: Re-enabling video interactions');
-        const videoCards = document.querySelectorAll('.video-card');
-        videoCards.forEach(card => {
-            card.style.pointerEvents = 'auto';
-            card.classList.remove('popup-active');
-        });
-    }
-
-    /**
-     * Handle affiliate option click - FIXED VERSION WITH LOADING STATE
+     * Handle affiliate option click
      */
     handleOptionClick(optionId) {
         console.log('VerificationPopup: Option clicked:', optionId);
         
-        const option = this.affiliateOptions.find(opt => opt.id === optionId);
-        if (!option) {
-            console.error('VerificationPopup: Option not found:', optionId);
+        const url = this.affiliateUrls[optionId];
+        if (!url) {
+            console.error('VerificationPopup: No URL found for option:', optionId);
             return;
         }
 
-        // CRITICAL: Immediately show loading state to prevent video from showing
-        this.showLoadingState();
-
-        // Track affiliate click
+        // Track click
         if (typeof analytics !== 'undefined') {
             analytics.trackAffiliateClick(optionId, this.currentVideoId);
         }
 
-        // Mark verification as completed
-        this.markCompleted(optionId);
+        // Mark as verified
+        this.markVerified();
         
-        console.log('VerificationPopup: Redirecting to:', option.url);
+        // Show loading overlay and redirect
+        this.showRedirectOverlay();
         
-        // Redirect immediately - no timeout delay
-        window.location.href = option.url;
-    }
-
-    /**
-     * Show loading state immediately when affiliate option is clicked
-     */
-    showLoadingState() {
-        console.log('VerificationPopup: Showing loading state');
-        
-        // Create or show loading overlay
-        let loadingOverlay = document.getElementById('affiliateLoadingOverlay');
-        if (!loadingOverlay) {
-            loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'affiliateLoadingOverlay';
-            loadingOverlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.9);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-                color: white;
-                font-family: Arial, sans-serif;
-            `;
-            loadingOverlay.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-                    <div style="font-size: 18px;">Redirecting...</div>
-                </div>
-                <style>
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                </style>
-            `;
-            document.body.appendChild(loadingOverlay);
-        } else {
-            loadingOverlay.style.display = 'flex';
-        }
-        
-        // Hide the verification popup immediately
-        this.hide();
-        
-        // Prevent any video loading by disabling all interactions
-        document.body.style.pointerEvents = 'none';
+        // Small delay to ensure overlay renders
+        setTimeout(() => {
+            window.location.href = url;
+        }, 100);
     }
 
     /**
      * Mark verification as completed
      */
-    markCompleted(optionId) {
-        console.log('VerificationPopup: Marking verification as completed');
-        this.isCompleted = true;
-        Utils.storage.set('verificationCompleted', true);
-        
-        // Track completion
-        if (typeof analytics !== 'undefined') {
-            analytics.trackVerificationComplete(optionId, this.currentVideoId);
-        }
-        
-        // Hide popup (redundant but safe)
-        this.hide();
-        
-        // Trigger completion callback if set
-        if (typeof this.completionCallback === 'function') {
-            this.completionCallback(this.currentVideoId);
-        }
+    markVerified() {
+        localStorage.setItem('verificationCompleted', 'true');
+        console.log('VerificationPopup: Verification marked as complete');
     }
 
     /**
-     * Setup event listeners - FIXED VERSION
+     * Show redirect loading overlay
+     */
+    showRedirectOverlay() {
+        // Hide verification popup first
+        this.hide();
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'redirectOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: white;
+            font-family: Arial, sans-serif;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="text-align: center;">
+                <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <div style="font-size: 18px; margin-bottom: 10px;">Redirecting...</div>
+                <div style="font-size: 14px; opacity: 0.8;">Please wait</div>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+        
+        document.body.appendChild(overlay);
+    }
+
+    /**
+     * Setup event listeners
      */
     setupEventListeners() {
         console.log('VerificationPopup: Setting up event listeners');
@@ -230,66 +156,62 @@ class VerificationPopup {
         // Prevent closing popup by clicking outside
         if (this.overlay) {
             this.overlay.addEventListener('click', (e) => {
+                // Only close if clicking the overlay itself, not its contents
                 if (e.target === this.overlay) {
-                    // Don't allow closing - user must complete verification
-                    e.stopPropagation();
                     e.preventDefault();
+                    e.stopPropagation();
+                    // Don't allow closing - user must complete verification
+                    console.log('VerificationPopup: Attempted to close popup - prevented');
                 }
             });
         }
 
-        // Setup click handlers for affiliate options - ENHANCED VERSION
+        // Handle affiliate option clicks
         document.addEventListener('click', (e) => {
             const affiliateOption = e.target.closest('.affiliate-option');
             if (affiliateOption) {
-                console.log('VerificationPopup: Affiliate option clicked via event listener');
-                
-                // Prevent event propagation immediately
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
                 
-                const optionId = affiliateOption.dataset.optionId;
+                const optionId = affiliateOption.getAttribute('data-option-id');
                 if (optionId) {
+                    console.log('VerificationPopup: Affiliate option clicked:', optionId);
                     this.handleOptionClick(optionId);
-                } else {
-                    console.error('VerificationPopup: No optionId found on clicked element');
                 }
             }
         });
-    }
 
-    /**
-     * Set completion callback
-     */
-    setCompletionCallback(callback) {
-        this.completionCallback = callback;
+        // Prevent escape key from closing popup
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.overlay && !this.overlay.classList.contains('hidden')) {
+                e.preventDefault();
+                console.log('VerificationPopup: Escape key blocked');
+            }
+        });
     }
 
     /**
      * Reset verification (for testing)
      */
     reset() {
-        console.log('VerificationPopup: Resetting verification');
-        this.isCompleted = false;
-        Utils.storage.remove('verificationCompleted');
+        localStorage.removeItem('verificationCompleted');
+        console.log('VerificationPopup: Verification reset');
+    }
+
+    /**
+     * Get current video ID
+     */
+    getCurrentVideoId() {
+        return this.currentVideoId;
     }
 }
 
-// Global function for onclick handlers - FIXED VERSION WITH IMMEDIATE LOADING
-function handleVerification(optionId) {
-    console.log('handleVerification called with:', optionId);
-    
-    // Prevent any event bubbling or default actions
-    if (typeof event !== 'undefined' && event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-    }
-    
+// Global function for backwards compatibility
+window.handleVerification = function(optionId) {
+    console.log('Global handleVerification called:', optionId);
     if (window.verificationPopup) {
         window.verificationPopup.handleOptionClick(optionId);
     } else {
-        console.error('verificationPopup not found on window object');
+        console.error('VerificationPopup instance not found');
     }
-}
+};

@@ -1,14 +1,11 @@
 /**
- * Video management module
+ * Video management module - Simplified for external video links
  */
 
 class VideoManager {
     constructor() {
         this.videos = [];
-        this.currentVideo = null;
         this.videoGrid = null;
-        this.videoModal = null;
-        this.videoPlayer = null;
         this.loadingIndicator = null;
         
         this.init();
@@ -16,8 +13,6 @@ class VideoManager {
 
     async init() {
         this.videoGrid = Utils.dom.$('#videoGrid');
-        this.videoModal = Utils.dom.$('#videoModal');
-        this.videoPlayer = Utils.dom.$('#videoPlayer');
         this.loadingIndicator = Utils.dom.$('#loadingIndicator');
 
         await this.loadVideos();
@@ -38,7 +33,9 @@ class VideoManager {
             setTimeout(() => {
                 this.renderVideos();
                 this.hideLoading();
-                analytics.track('videos_loaded', { count: this.videos.length });
+                if (typeof analytics !== 'undefined') {
+                    analytics.track('videos_loaded', { count: this.videos.length });
+                }
             }, 1000);
             
         } catch (error) {
@@ -66,9 +63,9 @@ class VideoManager {
         });
 
         // Track successful render
-        analytics.track('videos_rendered', {
-            count: this.videos.length
-        });
+        if (typeof analytics !== 'undefined') {
+            analytics.track('videos_rendered', { count: this.videos.length });
+        }
     }
 
     /**
@@ -77,41 +74,38 @@ class VideoManager {
     createVideoCard(video, index) {
         console.log('VideoManager: Creating card for:', video.id, video.title);
         
-        const card = Utils.dom.create('div', 'video-card');
+        const card = Utils.dom.create('div', 'video-card cursor-pointer transform transition-transform hover:scale-105');
         card.setAttribute('data-video-id', video.id);
         
         card.innerHTML = `
-            <div class="video-thumbnail">
+            <div class="video-thumbnail relative overflow-hidden rounded-lg bg-gray-800">
                 <img src="${video.thumbnail}" 
                      alt="${video.title}" 
                      class="w-full h-full object-cover"
                      loading="lazy"
                      onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDMyMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMWExYTFhIi8+Cjx0ZXh0IHg9IjE2MCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2NjYiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCI+VklERU88L3RleHQ+Cjwvc3ZnPg=='">
                 
-                <div class="play-button">
-                    <div class="play-icon"></div>
+                <div class="play-button absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity">
+                    <div class="play-icon w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
                 </div>
                 
                 ${video.duration ? `<div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">${video.duration}</div>` : ''}
             </div>
             
             <div class="p-3 md:p-4">
-                <h3 class="text-white font-medium text-sm md:text-base text-center">${video.title}</h3>
+                <h3 class="text-white font-medium text-sm md:text-base text-center line-clamp-2">${video.title}</h3>
+                ${video.views ? `<p class="text-gray-400 text-xs text-center mt-1">${video.views} views</p>` : ''}
             </div>
         `;
         
-        // FIXED: Use addEventListener instead of onclick and add proper event handling
+        // Add click handler
         card.addEventListener('click', (e) => {
-            // Make sure the click isn't from inside a popup
-            if (e.target.closest('.verification-popup')) {
-                console.log('VideoManager: Click inside popup ignored');
-                return; // Don't handle video clicks if inside popup
-            }
-            
-            // Prevent default action and stop propagation
             e.preventDefault();
             e.stopPropagation();
-            
             console.log('VideoManager: Video clicked:', video.id);
             this.handleVideoClick(video);
         });
@@ -120,79 +114,46 @@ class VideoManager {
     }
 
     /**
-     * Handle video card click
+     * Handle video card click - Check verification first
      */
-    h/**
- * Handle video card click
- */
-handleVideoClick(video) {
-    console.log('VideoManager: Redirecting to:', video.embedUrl);
+    handleVideoClick(video) {
+        console.log('VideoManager: Handling video click for:', video.id);
 
-    // Track click
-    analytics.trackVideoClick(video.id, video.title);
-
-    // Redirect user to external site (coomer.su / etc.)
-    window.open(video.embedUrl, '_blank');
-}
-
-    /**
-     * Play video in modal
-     */
-    playVideo(video) {
-        if (!video || !this.videoModal || !this.videoPlayer) return;
-        
-        // CRITICAL: Check if affiliate redirect is happening
-        if (document.getElementById('affiliateLoadingOverlay')) {
-            console.log('VideoManager: Affiliate redirect in progress, not playing video');
-            return;
+        // Track click
+        if (typeof analytics !== 'undefined') {
+            analytics.trackVideoClick(video.id, video.title);
         }
+
+        // Check if verification is needed
+        const isVerified = localStorage.getItem('verificationCompleted') === 'true';
         
-        // Check if body interactions are disabled (redirect happening)
-        if (document.body.style.pointerEvents === 'none') {
-            console.log('VideoManager: Body interactions disabled, not playing video');
-            return;
+        if (!isVerified) {
+            console.log('VideoManager: Verification required, showing popup');
+            this.showVerificationPopup(video.id);
+        } else {
+            console.log('VideoManager: User verified, redirecting to:', video.embedUrl);
+            // User is verified, redirect directly
+            window.open(video.embedUrl, '_blank');
         }
-        
-        console.log('VideoManager: Playing video:', video.id);
-        
-        // Set video source with autoplay
-        this.videoPlayer.src = `${video.embedUrl}?autoplay=1&rel=0`;
-        
-        // Show modal
-        this.videoModal.classList.remove('hidden');
-        this.videoModal.classList.add('flex');
-        
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-        
-        // Track video play
-        analytics.trackVideoPlay(video.id, video.title);
     }
 
     /**
-     * Close video modal
+     * Show verification popup
      */
-    closeVideo() {
-        if (!this.videoModal || !this.videoPlayer) return;
+    showVerificationPopup(videoId) {
+        console.log('VideoManager: Showing verification popup for video:', videoId);
         
-        console.log('VideoManager: Closing video');
-        
-        // Stop video
-        this.videoPlayer.src = '';
-        
-        // Hide modal
-        this.videoModal.classList.add('hidden');
-        this.videoModal.classList.remove('flex');
-        
-        // Restore body scroll
-        document.body.style.overflow = 'auto';
-        
-        // Track video close
-        if (this.currentVideo) {
-            analytics.trackVideoClose(this.currentVideo.id);
+        const overlay = document.getElementById('verificationOverlay');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            // Store which video was clicked
+            overlay.setAttribute('data-video-id', videoId);
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
         }
-        
-        this.currentVideo = null;
     }
 
     /**
@@ -221,8 +182,8 @@ handleVideoClick(video) {
         
         const errorElement = Utils.dom.create('div', 'text-center py-8 text-red-400');
         errorElement.innerHTML = `
-            <p class="text-lg font-medium">${message}</p>
-            <button onclick="location.reload()" class="mt-4 bg-brand-pink hover:bg-brand-pink-dark text-white px-6 py-2 rounded-lg transition-colors">
+            <p class="text-lg font-medium mb-4">${message}</p>
+            <button onclick="location.reload()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors">
                 Retry
             </button>
         `;
@@ -238,29 +199,14 @@ handleVideoClick(video) {
     setupEventListeners() {
         console.log('VideoManager: Setting up event listeners');
         
-        // Close modal when clicking outside
-        if (this.videoModal) {
-            this.videoModal.addEventListener('click', (e) => {
-                if (e.target === this.videoModal) {
-                    this.closeVideo();
-                }
-            });
-        }
-
-        // Close button - FIXED: Added proper event handling
-        const closeBtn = Utils.dom.$('#closeVideoBtn');
-        if (closeBtn) {
-            closeBtn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.closeVideo();
-            };
-        }
-
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.videoModal && !this.videoModal.classList.contains('hidden')) {
-                this.closeVideo();
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('verificationOverlay');
+                if (overlay && !overlay.classList.contains('hidden')) {
+                    // Don't allow closing verification popup with escape
+                    e.preventDefault();
+                }
             }
         });
     }
@@ -310,5 +256,13 @@ handleVideoClick(video) {
     async refresh() {
         this.showLoading();
         await this.loadVideos();
+    }
+
+    /**
+     * Reset verification (for testing)
+     */
+    resetVerification() {
+        localStorage.removeItem('verificationCompleted');
+        console.log('VideoManager: Verification reset');
     }
 }

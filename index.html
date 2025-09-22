@@ -61,7 +61,7 @@
             <!-- Content -->
             <div class="popup-content">
                 <!-- Main checkbox area -->
-                <div class="verification-checkbox-area" id="mainCheckbox" onclick="startVerification()">
+                <div class="verification-checkbox-area" id="mainCheckbox">
                     <div class="custom-checkbox" id="checkbox">
                         <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
                         <svg class="checkmark" viewBox="0 0 24 24" fill="currentColor">
@@ -71,20 +71,13 @@
                     <div class="verification-text">I'm not a robot</div>
                 </div>
 
-                <!-- Challenge section - FIXED: Added missing ID -->
+                <!-- Challenge section -->
                 <div class="verification-options" id="challengeSection">
-                    <!-- FIXED: Re-added aggressive inline handlers to prevent video loading -->
-                    <a href="#" class="affiliate-option" 
-                       onclick="event.preventDefault(); event.stopImmediatePropagation(); handleVerification('instabang'); return false;" 
-                       ontouchstart="event.preventDefault(); event.stopImmediatePropagation(); handleVerification('instabang'); return false;"
-                       data-option-id="instabang">
+                    <a href="#" class="affiliate-option" data-option-id="instabang">
                         <div class="option-text">Continue with Instabang</div>
                     </a>
                     
-                    <a href="#" class="affiliate-option" 
-                       onclick="event.preventDefault(); event.stopImmediatePropagation(); handleVerification('bootycallz'); return false;"
-                       ontouchstart="event.preventDefault(); event.stopImmediatePropagation(); handleVerification('bootycallz'); return false;"
-                       data-option-id="bootycallz">
+                    <a href="#" class="affiliate-option" data-option-id="bootycallz">
                         <div class="option-text">Continue with BootyCallz</div>
                     </a>
                 </div>
@@ -104,25 +97,6 @@
                 </div>
             </div>
         </div>
-    </div>    
-    
-    <!-- Video Player Modal -->
-    <div id="videoModal" class="video-modal hidden">
-        <div class="w-full max-w-4xl mx-4">
-            <div class="relative">
-                <!-- Close button -->
-                <button id="closeVideoBtn" class="video-close-btn">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                
-                <!-- Video iframe container -->
-                <div class="video-container">
-                    <iframe id="videoPlayer" class="video-iframe" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Scripts -->
@@ -133,7 +107,7 @@
     <script src="js/app.js"></script>
     
     <script>
-        // FIXED: Updated startVerification function
+        // Initialize verification popup checkbox interaction
         function startVerification() {
             console.log('startVerification called');
             
@@ -163,39 +137,107 @@
                 setTimeout(() => {
                     challengeSection.classList.add('active');
                 }, 500);
-            }, 1500); // 1.5 second loading simulation
+            }, 1500);
         }
 
-        // CRITICAL: Add capture event listener to catch affiliate clicks before anything else
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Setting up capture event listeners');
+        // Global function for affiliate redirects with loading overlay
+        function handleVerification(optionId) {
+            console.log('handleVerification called with:', optionId);
             
-            // Use capture phase to intercept clicks before they reach video cards
+            // Immediately show loading overlay
+            showRedirectOverlay();
+            
+            // Get the affiliate URL
+            const affiliateUrls = {
+                'instabang': 'https://t.mbsrv2.com/388143/5380?aff_sub5=SF_006OG000004lmDN',
+                'bootycallz': 'https://t.mbsrv2.com/388143/7411?bo=2753,2754,2755,2756&popUnder=true&aff_sub5=SF_006OG000004lmDN'
+            };
+            
+            const url = affiliateUrls[optionId];
+            if (!url) {
+                console.error('No URL found for option:', optionId);
+                return;
+            }
+            
+            // Store verification completion
+            localStorage.setItem('verificationCompleted', 'true');
+            
+            // Track the click if analytics exists
+            if (window.analytics) {
+                window.analytics.trackAffiliateClick(optionId);
+            }
+            
+            // Small delay to ensure overlay renders, then redirect
+            setTimeout(() => {
+                window.location.href = url;
+            }, 100);
+        }
+
+        // Show loading overlay for redirects
+        function showRedirectOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'redirectOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                color: white;
+                font-family: Arial, sans-serif;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                    <div style="font-size: 18px; margin-bottom: 10px;">Redirecting...</div>
+                    <div style="font-size: 14px; opacity: 0.8;">Please wait</div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Hide verification popup
+            const verificationOverlay = document.getElementById('verificationOverlay');
+            if (verificationOverlay) {
+                verificationOverlay.classList.add('hidden');
+            }
+        }
+
+        // Set up event listeners when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up event listeners');
+            
+            // Set up checkbox click
+            const mainCheckbox = document.getElementById('mainCheckbox');
+            if (mainCheckbox) {
+                mainCheckbox.addEventListener('click', startVerification);
+            }
+            
+            // Set up affiliate option clicks - use event delegation
             document.addEventListener('click', function(e) {
                 const affiliateOption = e.target.closest('.affiliate-option');
                 if (affiliateOption) {
-                    console.log('CAPTURE: Affiliate option clicked, stopping all propagation');
                     e.preventDefault();
                     e.stopPropagation();
-                    e.stopImmediatePropagation();
                     
                     const optionId = affiliateOption.getAttribute('data-option-id');
-                    if (optionId && window.handleVerification) {
-                        window.handleVerification(optionId);
+                    if (optionId) {
+                        handleVerification(optionId);
                     }
                 }
-            }, true); // TRUE = capture phase, fires before any other listeners
-            
-            // Same for touch events on mobile
-            document.addEventListener('touchstart', function(e) {
-                const affiliateOption = e.target.closest('.affiliate-option');
-                if (affiliateOption) {
-                    console.log('CAPTURE: Affiliate touch detected, stopping all propagation');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                }
-            }, true);
+            });
         });
     </script>
 
