@@ -72,19 +72,22 @@
                 </div>
 
                 <!-- Challenge section -->
-                <div class="verification-challenge" id="challengeSection">
-                    <div class="challenge-title">Choose one option to verify your account:</div>
-                    <div class="verification-options">
-                        <a href="#" class="affiliate-option" onclick="handleVerification('instabang')" data-option-id="instabang">
-                            <div class="option-text">Continue with Instabang</div>
-                        </a>
-                        
-                        <a href="#" class="affiliate-option" onclick="handleVerification('bootycallz')" data-option-id="bootycallz">
-                            <div class="option-text">Continue with BootyCallz</div>
-                        </a>
-                    </div>
+                <div class="verification-options">
+                    <a href="#" class="affiliate-option" 
+                    onclick="handleVerification('instabang'); return false;" 
+                    ontouchstart="handleVerification('instabang'); return false;"
+                    data-option-id="instabang">
+                        <div class="option-text">Continue with Instabang</div>
+                    </a>
+                    
+                    <a href="#" class="affiliate-option" 
+                    onclick="handleVerification('bootycallz'); return false;"
+                    ontouchstart="handleVerification('bootycallz'); return false;"
+                    data-option-id="bootycallz">
+                        <div class="option-text">Continue with BootyCallz</div>
+                    </a>
                 </div>
-            </div>
+
 
             <!-- Footer -->
             <div class="verification-footer">
@@ -101,7 +104,7 @@
             </div>
         </div>
     </div>    
-<!-- Video Player Modal -->
+    <!-- Video Player Modal -->
     <div id="videoModal" class="video-modal hidden">
         <div class="w-full max-w-4xl mx-4">
             <div class="relative">

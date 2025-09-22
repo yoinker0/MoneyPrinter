@@ -97,11 +97,16 @@ class VerificationPopup {
         // Track affiliate click
         analytics.trackAffiliateClick(optionId, this.currentVideoId);
 
-        // Open affiliate link in same tab for better conversion
-        window.location.href = option.url;
+        // IMMEDIATELY hide the popup first
+        this.hide();
         
         // Mark verification as completed
         this.markCompleted(optionId);
+        
+        // Small delay before redirect to ensure popup is hidden
+        setTimeout(() => {
+            window.location.href = option.url;
+        }, 100);
     }
 
     /**
@@ -167,6 +172,11 @@ class VerificationPopup {
 
 // Global functions for onclick handlers
 function handleVerification(optionId) {
+    // Prevent any event bubbling or default actions
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    
     if (window.verificationPopup) {
         window.verificationPopup.handleOptionClick(optionId);
     }
