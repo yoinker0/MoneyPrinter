@@ -65,14 +65,20 @@ class VerificationPopup {
             return false;
         }
 
+        console.log('VerificationPopup: Showing popup for video:', videoId);
         this.currentVideoId = videoId;
         this.overlay.classList.remove('hidden');
         
         // Prevent body scroll
         document.body.style.overflow = 'hidden';
         
+        // CRITICAL: Disable all video interactions while popup is open
+        this.disableVideoInteractions();
+        
         // Track popup show
-        analytics.trackPopupShow(videoId);
+        if (typeof analytics !== 'undefined') {
+            analytics.trackPopupShow(videoId);
+        }
         
         return true;
     }
@@ -81,27 +87,64 @@ class VerificationPopup {
      * Hide popup
      */
     hide() {
+        console.log('VerificationPopup: Hiding popup');
         this.overlay.classList.add('hidden');
         
         // Restore body scroll
         document.body.style.overflow = 'auto';
+        
+        // CRITICAL: Re-enable video interactions
+        this.enableVideoInteractions();
     }
 
     /**
-     * Handle affiliate option click
+     * Disable video interactions while popup is open
+     */
+    disableVideoInteractions() {
+        console.log('VerificationPopup: Disabling video interactions');
+        const videoCards = document.querySelectorAll('.video-card');
+        videoCards.forEach(card => {
+            card.style.pointerEvents = 'none';
+            card.classList.add('popup-active');
+        });
+    }
+
+    /**
+     * Re-enable video interactions
+     */
+    enableVideoInteractions() {
+        console.log('VerificationPopup: Re-enabling video interactions');
+        const videoCards = document.querySelectorAll('.video-card');
+        videoCards.forEach(card => {
+            card.style.pointerEvents = 'auto';
+            card.classList.remove('popup-active');
+        });
+    }
+
+    /**
+     * Handle affiliate option click - FIXED VERSION
      */
     handleOptionClick(optionId) {
+        console.log('VerificationPopup: Option clicked:', optionId);
+        
         const option = this.affiliateOptions.find(opt => opt.id === optionId);
-        if (!option) return;
+        if (!option) {
+            console.error('VerificationPopup: Option not found:', optionId);
+            return;
+        }
 
         // Track affiliate click
-        analytics.trackAffiliateClick(optionId, this.currentVideoId);
+        if (typeof analytics !== 'undefined') {
+            analytics.trackAffiliateClick(optionId, this.currentVideoId);
+        }
 
         // IMMEDIATELY hide the popup first
         this.hide();
         
         // Mark verification as completed
         this.markCompleted(optionId);
+        
+        console.log('VerificationPopup: Redirecting to:', option.url);
         
         // Small delay before redirect to ensure popup is hidden
         setTimeout(() => {
@@ -113,13 +156,16 @@ class VerificationPopup {
      * Mark verification as completed
      */
     markCompleted(optionId) {
+        console.log('VerificationPopup: Marking verification as completed');
         this.isCompleted = true;
         Utils.storage.set('verificationCompleted', true);
         
         // Track completion
-        analytics.trackVerificationComplete(optionId, this.currentVideoId);
+        if (typeof analytics !== 'undefined') {
+            analytics.trackVerificationComplete(optionId, this.currentVideoId);
+        }
         
-        // Hide popup
+        // Hide popup (redundant but safe)
         this.hide();
         
         // Trigger completion callback if set
@@ -129,26 +175,38 @@ class VerificationPopup {
     }
 
     /**
-     * Setup event listeners
+     * Setup event listeners - FIXED VERSION
      */
     setupEventListeners() {
+        console.log('VerificationPopup: Setting up event listeners');
+        
         // Prevent closing popup by clicking outside
         if (this.overlay) {
             this.overlay.addEventListener('click', (e) => {
                 if (e.target === this.overlay) {
                     // Don't allow closing - user must complete verification
                     e.stopPropagation();
+                    e.preventDefault();
                 }
             });
         }
 
-        // Setup click handlers for affiliate options
+        // Setup click handlers for affiliate options - ENHANCED VERSION
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.affiliate-option')) {
-                const option = e.target.closest('.affiliate-option');
-                const optionId = option.dataset.optionId;
+            const affiliateOption = e.target.closest('.affiliate-option');
+            if (affiliateOption) {
+                console.log('VerificationPopup: Affiliate option clicked via event listener');
+                
+                // Prevent event propagation immediately
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                const optionId = affiliateOption.dataset.optionId;
                 if (optionId) {
                     this.handleOptionClick(optionId);
+                } else {
+                    console.error('VerificationPopup: No optionId found on clicked element');
                 }
             }
         });
@@ -165,19 +223,26 @@ class VerificationPopup {
      * Reset verification (for testing)
      */
     reset() {
+        console.log('VerificationPopup: Resetting verification');
         this.isCompleted = false;
         Utils.storage.remove('verificationCompleted');
     }
 }
 
-// Global functions for onclick handlers
+// Global function for onclick handlers - FIXED VERSION
 function handleVerification(optionId) {
+    console.log('handleVerification called with:', optionId);
+    
     // Prevent any event bubbling or default actions
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
+    if (typeof event !== 'undefined' && event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+    }
     
     if (window.verificationPopup) {
         window.verificationPopup.handleOptionClick(optionId);
+    } else {
+        console.error('verificationPopup not found on window object');
     }
 }

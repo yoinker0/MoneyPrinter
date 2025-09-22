@@ -75,6 +75,8 @@ class VideoManager {
      * Create video card element
      */
     createVideoCard(video, index) {
+        console.log('VideoManager: Creating card for:', video.id, video.title);
+        
         const card = Utils.dom.create('div', 'video-card');
         card.setAttribute('data-video-id', video.id);
         
@@ -98,7 +100,21 @@ class VideoManager {
             </div>
         `;
         
-        card.onclick = () => this.handleVideoClick(video);
+        // FIXED: Use addEventListener instead of onclick and add proper event handling
+        card.addEventListener('click', (e) => {
+            // Make sure the click isn't from inside a popup
+            if (e.target.closest('.verification-popup')) {
+                console.log('VideoManager: Click inside popup ignored');
+                return; // Don't handle video clicks if inside popup
+            }
+            
+            // Prevent default action and stop propagation
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('VideoManager: Video clicked:', video.id);
+            this.handleVideoClick(video);
+        });
         
         return card;
     }
@@ -107,6 +123,15 @@ class VideoManager {
      * Handle video card click
      */
     handleVideoClick(video) {
+        console.log('VideoManager: Handling video click for:', video.id);
+        
+        // CRITICAL: Check if verification popup is currently visible
+        if (window.verificationPopup && window.verificationPopup.overlay && 
+            !window.verificationPopup.overlay.classList.contains('hidden')) {
+            console.log('VideoManager: Popup is visible, ignoring video click');
+            return; // Don't handle video clicks while popup is open
+        }
+        
         this.currentVideo = video;
         
         // Track video click
@@ -114,10 +139,12 @@ class VideoManager {
         
         // Check if verification popup should be shown
         if (window.verificationPopup && window.verificationPopup.show(video.id)) {
+            console.log('VideoManager: Showing verification popup');
             return; // Popup shown, wait for completion
         }
         
         // Play video immediately if verification not needed
+        console.log('VideoManager: Playing video immediately');
         this.playVideo(video);
     }
 
@@ -126,6 +153,8 @@ class VideoManager {
      */
     playVideo(video) {
         if (!video || !this.videoModal || !this.videoPlayer) return;
+        
+        console.log('VideoManager: Playing video:', video.id);
         
         // Set video source with autoplay
         this.videoPlayer.src = `${video.embedUrl}?autoplay=1&rel=0`;
@@ -146,6 +175,8 @@ class VideoManager {
      */
     closeVideo() {
         if (!this.videoModal || !this.videoPlayer) return;
+        
+        console.log('VideoManager: Closing video');
         
         // Stop video
         this.videoPlayer.src = '';
@@ -206,6 +237,8 @@ class VideoManager {
      * Setup event listeners
      */
     setupEventListeners() {
+        console.log('VideoManager: Setting up event listeners');
+        
         // Close modal when clicking outside
         if (this.videoModal) {
             this.videoModal.addEventListener('click', (e) => {
@@ -215,10 +248,14 @@ class VideoManager {
             });
         }
 
-        // Close button
+        // Close button - FIXED: Added proper event handling
         const closeBtn = Utils.dom.$('#closeVideoBtn');
         if (closeBtn) {
-            closeBtn.onclick = () => this.closeVideo();
+            closeBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeVideo();
+            };
         }
 
         // Keyboard shortcuts
