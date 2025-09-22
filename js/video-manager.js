@@ -122,31 +122,18 @@ class VideoManager {
     /**
      * Handle video card click
      */
-    handleVideoClick(video) {
-        console.log('VideoManager: Handling video click for:', video.id);
-        
-        // CRITICAL: Check if verification popup is currently visible
-        if (window.verificationPopup && window.verificationPopup.overlay && 
-            !window.verificationPopup.overlay.classList.contains('hidden')) {
-            console.log('VideoManager: Popup is visible, ignoring video click');
-            return; // Don't handle video clicks while popup is open
-        }
-        
-        this.currentVideo = video;
-        
-        // Track video click
-        analytics.trackVideoClick(video.id, video.title);
-        
-        // Check if verification popup should be shown
-        if (window.verificationPopup && window.verificationPopup.show(video.id)) {
-            console.log('VideoManager: Showing verification popup');
-            return; // Popup shown, wait for completion
-        }
-        
-        // Play video immediately if verification not needed
-        console.log('VideoManager: Playing video immediately');
-        this.playVideo(video);
-    }
+    h/**
+ * Handle video card click
+ */
+handleVideoClick(video) {
+    console.log('VideoManager: Redirecting to:', video.embedUrl);
+
+    // Track click
+    analytics.trackVideoClick(video.id, video.title);
+
+    // Redirect user to external site (coomer.su / etc.)
+    window.open(video.embedUrl, '_blank');
+}
 
     /**
      * Play video in modal
