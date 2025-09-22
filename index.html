@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusive Videos - Premium Content</title>
+    <meta name="description" content="Premium exclusive video content - verify to unlock">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <!-- Tailwind Config -->
+    <script src="js/tailwind-config.js"></script>
+</head>
+<body class="bg-dark-bg text-white min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-dark-border px-5 py-4 text-center">
+        <h1 class="text-xl font-semibold text-white">Exclusive Videos</h1>
+    </header>
+
+    <!-- Video Grid -->
+    <main class="px-4 py-5">
+        <div id="videoGrid" class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:gap-5">
+            <!-- Videos loaded dynamically -->
+        </div>
+        
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" class="text-center py-8 text-light-text">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-pink"></div>
+            <p class="mt-2">Loading videos...</p>
+        </div>
+    </main>
+
+    <!-- Verification Overlay -->
+    <div id="verificationOverlay" class="verification-overlay hidden">
+        <div class="verification-popup bg-white rounded-lg max-w-sm w-full mx-4 fade-in roboto">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="popup-header">
+                    <div class="header-content">
+                        <svg class="verification-lock-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18,8h-1V6c0-2.76-2.24-5-5-5S7,3.24,7,6v2H6c-1.1,0-2,0.9-2,2v10c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V10C20,8.9,19.1,8,18,8z M12,17c-1.1,0-2-0.9-2-2s0.9-2,2-2s2,0.9,2,2S13.1,17,12,17z M15.1,8H8.9V6c0-1.71,1.39-3.1,3.1-3.1c1.71,0,3.1,1.39,3.1,3.1V8z"/>
+                        </svg>
+                        <div class="header-text">
+                            <h2>Verification Required</h2>
+                            <p>Please complete one quick step to unlock this video.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="popup-content">
+                    <div class="verification-options">
+                        <a href="#" class="affiliate-option" onclick="handleVerification('instabang')" data-option-id="instabang">
+                            <div class="option-number blue">1</div>
+                            <div class="option-text">Continue with Instabang</div>
+                        </a>
+                        
+                        <a href="#" class="affiliate-option" onclick="handleVerification('bootycallz')" data-option-id="bootycallz">
+                            <div class="option-number green">2</div>
+                            <div class="option-text">Continue with BootyCallz</div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="verification-footer">
+                    <svg class="verification-shield-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                    </svg>
+                    <div class="footer-text">Verification required to access adult content. This step is free and secure.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Video Player Modal -->
+    <div id="videoModal" class="video-modal hidden">
+        <div class="w-full max-w-4xl mx-4">
+            <div class="relative">
+                <!-- Close button -->
+                <button id="closeVideoBtn" class="video-close-btn">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                
+                <!-- Video iframe container -->
+                <div class="video-container">
+                    <iframe id="videoPlayer" class="video-iframe" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/verification-popup.js"></script>
+    <script src="js/video-manager.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "VideoGallery",
+        "name": "Exclusive Videos",
+        "description": "Premium exclusive video content",
+        "url": ""
+    }
+    </script>
+</body>
+</html>

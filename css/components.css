@@ -1,0 +1,269 @@
+/* ==========================================================================
+   Video Card Component
+   ========================================================================== */
+
+.video-card {
+    background: var(--dark-card);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    min-height: 120px;
+    contain: layout style paint;
+}
+
+.video-thumbnail {
+    position: relative;
+    aspect-ratio: 16/9;
+    min-height: 85px;
+    min-width: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3rem;
+    height: 3rem;
+    background: var(--brand-pink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.play-button:hover {
+    background: var(--brand-pink-dark);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.play-icon {
+    width: 0;
+    height: 0;
+    border-left: 12px solid white;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    margin-left: 2px;
+}
+
+@media (min-width: 768px) {
+    .play-button {
+        width: 3.5rem;
+        height: 3.5rem;
+    }
+    
+    .play-icon {
+        border-left: 16px solid white;
+        border-top: 9px solid transparent;
+        border-bottom: 9px solid transparent;
+    }
+}
+
+/* ==========================================================================
+   Verification Popup Component
+   ========================================================================== */
+
+.verification-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.verification-overlay.hidden {
+    display: none;
+}
+
+.verification-popup {
+    background: var(--dark-card);
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
+    max-width: 420px;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.verification-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--brand-pink);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.header-text h2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.header-text p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+}
+
+.popup-content {
+    padding: 20px 24px;
+}
+
+.verification-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.affiliate-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    text-align: left;
+}
+
+.affiliate-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--brand-pink);
+    transform: translateY(-1px);
+}
+
+.affiliate-option:active {
+    transform: translateY(0);
+}
+
+.option-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: white;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.option-number.blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.option-number.green {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.option-number.purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #667eea 100%);
+}
+
+.option-text {
+    font-size: 14px;
+    color: white;
+    font-weight: 400;
+}
+
+.verification-footer {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.privacy-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--brand-pink);
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Video Modal Component
+   ========================================================================== */
+
+.video-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 40;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-close-btn {
+    position: absolute;
+    top: -3rem;
+    right: 0;
+    color: white;
+    transition: color 0.2s ease;
+    z-index: 10;
+}
+
+.video-close-btn:hover {
+    color: var(--brand-pink);
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+}
+
+.video-iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.5rem;
+}
+
+/* ==========================================================================
+   Loading Component
+   ========================================================================== */
+
+.loading-spinner {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid transparent;
+    border-bottom-color: var(--brand-pink);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
