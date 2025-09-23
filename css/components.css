@@ -201,15 +201,35 @@
     line-height: 1.4;
 }
 
-/* Loading spinner - MUCH MORE VISIBLE */
+/* Loading spinner - BLUE AND VISIBLE */
 .loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #e8eaed;
-    border-top: 3px solid #4285f4;
-    border-radius: 50%;
-    animation: recaptcha-spin 0.8s linear infinite;
+    width: 20px !important;
+    height: 20px !important;
+    border: 3px solid #e8eaed !important;
+    border-top: 3px solid #4285f4 !important;
+    border-radius: 50% !important;
+    animation: recaptcha-spin 0.8s linear infinite !important;
+    background: transparent !important;
 }
+
+@keyframes recaptcha-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Force override for specific ID */
+#loadingSpinner.loading-spinner {
+    width: 20px !important;
+    height: 20px !important;
+    border: 3px solid #e8eaed !important;
+    border-top: 3px solid #4285f4 !important;
+    border-left: 3px solid #4285f4 !important;
+    border-radius: 50% !important;
+    animation: recaptcha-spin 0.8s linear infinite !important;
+    background: transparent !important;
+    display: block !important;
+}
+
 
 @keyframes recaptcha-spin {
     0% { transform: rotate(0deg); }
@@ -471,22 +491,3 @@
     border-radius: 0.5rem;
 }
 
-/* ==========================================================================
-   Loading Component
-   ========================================================================== */
-
-.loading-spinner {
-    display: inline-block;
-    animation: spin 1s linear infinite;
-    border-radius: 50%;
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid transparent;
-    border-bottom-color: var(--brand-pink);
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
