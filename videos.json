@@ -70,7 +70,7 @@
   "affiliateOptions": [
     {
       "id": "instabang",
-      "title": "Verify with Instabang",
+      "title": "Verify with Partner A",
       "subtitle": "Quick verification process",
       "type": "dating",
       "color": "blue",
@@ -81,7 +81,7 @@
     },
     {
       "id": "bootycallz",
-      "title": "Verify with BootyCallz",
+      "title": "Verify with Partner B",
       "subtitle": "Fast verification method",
       "type": "dating",
       "color": "green",
