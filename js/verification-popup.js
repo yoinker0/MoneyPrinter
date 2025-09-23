@@ -1,5 +1,5 @@
 /**
- * Verification popup module - Simplified version
+ * Verification popup module - Fixed version
  */
 
 class VerificationPopup {
@@ -24,7 +24,8 @@ class VerificationPopup {
      * Check if verification is completed
      */
     isVerified() {
-        return localStorage.getItem('verificationCompleted') === 'true';
+        // Use sessionStorage instead of localStorage for session-based verification
+        return sessionStorage.getItem('verificationCompleted') === 'true';
     }
 
     /**
@@ -42,7 +43,6 @@ class VerificationPopup {
         
         if (this.overlay) {
             this.overlay.classList.remove('hidden');
-            this.overlay.classList.add('flex');
             document.body.style.overflow = 'hidden';
             
             // Track popup show
@@ -64,7 +64,6 @@ class VerificationPopup {
         
         if (this.overlay) {
             this.overlay.classList.add('hidden');
-            this.overlay.classList.remove('flex');
             document.body.style.overflow = 'auto';
         }
     }
@@ -86,65 +85,38 @@ class VerificationPopup {
             analytics.trackAffiliateClick(optionId, this.currentVideoId);
         }
 
+        // Show immediate visual feedback on clicked button
+        const clickedButton = document.querySelector(`[data-option-id="${optionId}"]`);
+        if (clickedButton) {
+            clickedButton.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <div style="width: 16px; height: 16px; border: 2px solid #e0e0e0; border-top: 2px solid #4285f4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    Redirecting...
+                </div>
+            `;
+            clickedButton.style.pointerEvents = 'none';
+            clickedButton.style.opacity = '0.8';
+        }
+
         // Mark as verified
         this.markVerified();
         
-        // Show loading overlay and redirect
-        this.showRedirectOverlay();
+        // Hide popup immediately
+        this.hide();
         
-        // Small delay to ensure overlay renders
+        // Redirect with minimal delay
         setTimeout(() => {
             window.location.href = url;
-        }, 100);
+        }, 50);
     }
 
     /**
      * Mark verification as completed
      */
     markVerified() {
-        localStorage.setItem('verificationCompleted', 'true');
+        // Use sessionStorage for session-based verification
+        sessionStorage.setItem('verificationCompleted', 'true');
         console.log('VerificationPopup: Verification marked as complete');
-    }
-
-    /**
-     * Show redirect loading overlay
-     */
-    showRedirectOverlay() {
-        // Hide verification popup first
-        this.hide();
-        
-        const overlay = document.createElement('div');
-        overlay.id = 'redirectOverlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            color: white;
-            font-family: Arial, sans-serif;
-        `;
-        
-        overlay.innerHTML = `
-            <div style="text-align: center;">
-                <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-                <div style="font-size: 18px; margin-bottom: 10px;">Redirecting...</div>
-                <div style="font-size: 14px; opacity: 0.8;">Please wait</div>
-            </div>
-            <style>
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            </style>
-        `;
-        
-        document.body.appendChild(overlay);
     }
 
     /**
@@ -156,11 +128,9 @@ class VerificationPopup {
         // Prevent closing popup by clicking outside
         if (this.overlay) {
             this.overlay.addEventListener('click', (e) => {
-                // Only close if clicking the overlay itself, not its contents
                 if (e.target === this.overlay) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Don't allow closing - user must complete verification
                     console.log('VerificationPopup: Attempted to close popup - prevented');
                 }
             });
@@ -172,6 +142,7 @@ class VerificationPopup {
             if (affiliateOption) {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 
                 const optionId = affiliateOption.getAttribute('data-option-id');
                 if (optionId) {
@@ -194,7 +165,7 @@ class VerificationPopup {
      * Reset verification (for testing)
      */
     reset() {
-        localStorage.removeItem('verificationCompleted');
+        sessionStorage.removeItem('verificationCompleted');
         console.log('VerificationPopup: Verification reset');
     }
 
@@ -204,11 +175,59 @@ class VerificationPopup {
     getCurrentVideoId() {
         return this.currentVideoId;
     }
+
+    /**
+     * Set completion callback for compatibility
+     */
+    setCompletionCallback(callback) {
+        this.completionCallback = callback;
+    }
 }
+
+// Global functions for reCAPTCHA functionality
+window.startVerification = function() {
+    console.log('startVerification called');
+    
+    const checkbox = document.getElementById('checkbox');
+    const spinner = document.getElementById('loadingSpinner');
+    const challengeSection = document.getElementById('challengeSection');
+    const mainCheckbox = document.getElementById('mainCheckbox');
+    
+    if (!checkbox || !spinner || !challengeSection) {
+        console.error('Required elements not found for verification');
+        return;
+    }
+    
+    // Show loading state
+    spinner.style.display = 'block';
+    checkbox.classList.add('loading');
+    if (mainCheckbox) mainCheckbox.classList.add('loading');
+    
+    // Simulate loading time
+    setTimeout(() => {
+        // Hide spinner and show checkmark
+        spinner.style.display = 'none';
+        checkbox.classList.remove('loading');
+        checkbox.classList.add('checked');
+        
+        // Show challenge after a short delay
+        setTimeout(() => {
+            challengeSection.classList.add('active');
+        }, 500);
+    }, 1500);
+};
 
 // Global function for backwards compatibility
 window.handleVerification = function(optionId) {
     console.log('Global handleVerification called:', optionId);
+    
+    // Prevent event bubbling
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+    }
+    
     if (window.verificationPopup) {
         window.verificationPopup.handleOptionClick(optionId);
     } else {
